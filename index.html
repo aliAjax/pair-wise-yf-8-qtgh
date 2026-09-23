@@ -3,36 +3,53 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>胶片分镜条核对台</title>
+    <title>放映线路编排台</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="shell">
       <header class="hero">
         <div>
-          <p class="eyebrow">纸质放映胶片整理</p>
-          <h1>胶片分镜条核对台</h1>
+          <p class="eyebrow">纸质放映胶片调度</p>
+          <h1>放映线路编排台</h1>
         </div>
         <div class="hero-stats">
           <div>
-            <span>总时长</span>
-            <strong id="totalDuration">0:00</strong>
+            <span>放映中卷</span>
+            <strong id="activeCount">0</strong>
           </div>
           <div>
-            <span>破损片段</span>
-            <strong id="damageCount">0</strong>
+            <span>缺盒冻结</span>
+            <strong id="frozenCount">0</strong>
           </div>
           <div>
-            <span>片段数</span>
+            <span>片段总数</span>
             <strong id="segmentCount">0</strong>
           </div>
         </div>
       </header>
 
+      <section class="boards">
+        <div class="panel board-panel">
+          <div class="panel-head">
+            <h2>放映线路</h2>
+            <span>件数 = 放映中卷数</span>
+          </div>
+          <div id="routeBoard" class="route-board"></div>
+        </div>
+        <div class="panel board-panel">
+          <div class="panel-head">
+            <h2>片盒库存</h2>
+            <span>仅放映中卷占用</span>
+          </div>
+          <div id="boxBoard" class="box-board"></div>
+        </div>
+      </section>
+
       <section class="toolbar">
         <label>
-          胶片卷
-          <input id="reelTitle" type="text" placeholder="例：春日试映A卷" />
+          当前胶片卷
+          <select id="reelSelect"></select>
         </label>
         <label>
           颜色偏移
@@ -49,64 +66,119 @@
           搜索
           <input id="searchInput" type="search" placeholder="片段编号或备注" />
         </label>
-        <button id="exportBtn">导出清单</button>
+        <button id="exportBtn">导出排期</button>
       </section>
 
       <section class="layout">
-        <aside class="panel">
-          <h2>录入片段</h2>
-          <form id="segmentForm" class="segment-form">
-            <label>
-              片段编号
-              <input id="codeInput" required placeholder="A-014" />
-            </label>
-            <label>
-              时长秒数
-              <input id="durationInput" required type="number" min="1" value="12" />
-            </label>
-            <label>
-              颜色偏移
-              <select id="shiftInput">
-                <option value="正常">正常</option>
-                <option value="偏红">偏红</option>
-                <option value="偏青">偏青</option>
-                <option value="偏黄">偏黄</option>
-                <option value="褪色">褪色</option>
-              </select>
-            </label>
-            <label>
-              破损情况
-              <select id="damageInput">
-                <option value="完好">完好</option>
-                <option value="轻微划痕">轻微划痕</option>
-                <option value="齿孔破损">齿孔破损</option>
-                <option value="接片松动">接片松动</option>
-                <option value="需跳过">需跳过</option>
-              </select>
-            </label>
-            <label>
-              缩略图
-              <input id="thumbInput" type="file" accept="image/*" />
-            </label>
-            <label>
-              备注
-              <textarea id="noteInput" rows="4" placeholder="试映前要留意的画面、接片或声音点"></textarea>
-            </label>
-            <button class="primary" type="submit">加入放映清单</button>
-          </form>
+        <aside class="side-col">
+          <section class="panel">
+            <h2>开卷登记</h2>
+            <form id="openForm" class="segment-form">
+              <label>
+                胶片卷名称
+                <input id="openTitle" type="text" required placeholder="例：春日试映A卷" />
+              </label>
+              <label>
+                放映线路
+                <select id="openRoute"></select>
+              </label>
+              <div class="qty-field">
+                <span>片盒数量</span>
+                <div id="boxQtyList" class="qty-grid"></div>
+              </div>
+              <div class="form-actions">
+                <button class="primary" type="submit" data-open-action="open">开卷</button>
+                <button type="submit" data-open-action="freeze">缺盒登记（冻结）</button>
+              </div>
+              <p class="hint">片盒被其他放映中卷占用、或线路件数超限时整卷拒绝；片盒未到齐可先登记为缺盒卷，冻结不占资源，到齐后恢复。</p>
+            </form>
+          </section>
+
+          <section class="panel">
+            <h2>录入片段</h2>
+            <form id="segmentForm" class="segment-form">
+              <label>
+                片段编号
+                <input id="codeInput" required placeholder="A-014" />
+              </label>
+              <label>
+                时长秒数
+                <input id="durationInput" required type="number" min="1" value="12" />
+              </label>
+              <label>
+                颜色偏移
+                <select id="shiftInput">
+                  <option value="正常">正常</option>
+                  <option value="偏红">偏红</option>
+                  <option value="偏青">偏青</option>
+                  <option value="偏黄">偏黄</option>
+                  <option value="褪色">褪色</option>
+                </select>
+              </label>
+              <label>
+                破损情况
+                <select id="damageInput">
+                  <option value="完好">完好</option>
+                  <option value="轻微划痕">轻微划痕</option>
+                  <option value="齿孔破损">齿孔破损</option>
+                  <option value="接片松动">接片松动</option>
+                  <option value="需跳过">需跳过</option>
+                </select>
+              </label>
+              <label>
+                缩略图
+                <input id="thumbInput" type="file" accept="image/*" />
+              </label>
+              <label>
+                备注
+                <textarea id="noteInput" rows="3" placeholder="试映前要留意的画面、接片或声音点"></textarea>
+              </label>
+              <button class="primary" type="submit">加入当前卷</button>
+            </form>
+          </section>
         </aside>
 
         <section class="panel list-panel">
+          <div id="noticeList" class="notice-list"></div>
+
           <div class="panel-head">
-            <h2>放映顺序</h2>
-            <span>拖拽片段调整顺序</span>
+            <h2>卷次与线路</h2>
+            <span>按登记顺序排列，拒绝事务不改变顺序</span>
+          </div>
+          <div id="reelList" class="reel-list"></div>
+
+          <div class="panel-head subsection">
+            <h2 id="segmentListTitle">放映顺序</h2>
+            <span id="segmentListHint">拖拽片段调整顺序</span>
           </div>
           <div id="segmentList" class="segment-list"></div>
         </section>
 
-        <aside class="panel warning-panel">
-          <h2>试映前核对</h2>
-          <div id="warningList" class="warning-list"></div>
+        <aside class="side-col">
+          <section class="panel">
+            <h2>每卷片段规格</h2>
+            <form id="specForm" class="segment-form">
+              <label>
+                每卷片段数上限
+                <input id="specSegments" type="number" min="1" step="1" />
+              </label>
+              <label>
+                单段时长上限（秒）
+                <input id="specSegmentDuration" type="number" min="1" step="1" />
+              </label>
+              <label>
+                每卷总时长上限（秒）
+                <input id="specReelDuration" type="number" min="1" step="1" />
+              </label>
+              <button class="primary" type="submit">应用规格</button>
+              <p class="hint">保存时重算全部未结束卷，任一超限则整组退回、维持原规格。</p>
+            </form>
+          </section>
+
+          <section class="panel warning-panel">
+            <h2>试映前核对</h2>
+            <div id="warningList" class="warning-list"></div>
+          </section>
         </aside>
       </section>
     </main>
